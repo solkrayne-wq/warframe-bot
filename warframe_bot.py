@@ -8,8 +8,53 @@ from datetime import datetime, timezone
 # ============================================================
 #  НАЛАШТУВАННЯ — заповни ці значення перед запуском
 # ============================================================
-BOT_TOKEN = "ВАШ_ТОКЕН_БОТА"          # Токен бота з Discord Developer Portal
-CHANNEL_ID = 123456789012345678        # ID каналу, куди слати новини
+import os
+
+BOT_TOKEN = os.environ["DISCORD_TOKEN"]
+CHANNEL_ID = int(os.environ["CHANNEL_ID"])
+```
+
+- Натисни **Commit changes**
+
+---
+
+## КРОК 6 — Деплой на Render.com
+
+👉 https://render.com
+
+**6.1 Реєстрація:**
+- Натисни **Get Started for Free**
+- Вибери **Sign up with GitHub** — це найпростіше
+
+**6.2 Створи сервіс:**
+- Після входу натисни **New → Background Worker**
+- У списку репозиторіїв знайди `warframe-bot` → натисни **Connect**
+- Налаштування залишай як є — Render сам знайде `render.yaml`
+- Натисни **Create Background Worker**
+
+**6.3 Додай токен і ID (найважливіший крок!):**
+- Відкрий свій сервіс на Render
+- Зліва натисни **Environment**
+- Натисни **Add Environment Variable** і додай два записи:
+
+| Key | Value |
+|-----|-------|
+| `DISCORD_TOKEN` | токен бота зі Кроку 1 |
+| `CHANNEL_ID` | ID каналу з Кроку 2 |
+
+- Натисни **Save Changes**
+- Render автоматично перезапустить бота ✅
+
+---
+
+## КРОК 7 — Перевірка
+
+- На сторінці сервісу в Render натисни **Logs** (зліва)
+- Якщо все добре, побачиш:
+```
+✅ Бот запущено як: Warframe News Bot#1234
+📢 Канал для новин: 1234567890123456789
+[09:00:00] Перевірку завершено.
 # ============================================================
 
 intents = discord.Intents.default()
