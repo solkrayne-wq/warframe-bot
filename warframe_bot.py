@@ -9,6 +9,7 @@ BOT_TOKEN = os.environ["DISCORD_TOKEN"]
 CHANNEL_ID = int(os.environ["CHANNEL_ID"])
 
 intents = discord.Intents.default()
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 WF_API = "https://api.warframestat.us/pc"
@@ -29,37 +30,36 @@ state = load_state()
 def build_alert_embed(alert):
     mission = alert.get("mission", {})
     reward = mission.get("reward", {})
-    items = reward.get("itemString") or ", ".join(reward.get("items", [])) or "—"
-    embed = discord.Embed(title="Новий Алерт!", color=0xFF4500, timestamp=datetime.now(timezone.utc))
-    embed.add_field(name="Місія", value=f"{mission.get('node', '?')} ({mission.get('type', '?')})", inline=False)
-    embed.add_field(name="Ціль", value=mission.get("faction", "?"), inline=True)
-    embed.add_field(name="Нагорода", value=items, inline=True)
-    embed.add_field(name="Рівень ворогів", value=f"{mission.get('minEnemyLevel', '?')}-{mission.get('maxEnemyLevel', '?')}", inline=True)
-    embed.add_field(name="Закінчується", value=alert.get("eta", "?"), inline=False)
+    items = reward.get("itemString") or ", ".join(reward.get("items", [])) or "-"
+    embed = discord.Embed(title="Novyi Alert!", color=0xFF4500, timestamp=datetime.now(timezone.utc))
+    embed.add_field(name="Misiya", value=f"{mission.get('node', '?')} ({mission.get('type', '?')})", inline=False)
+    embed.add_field(name="Tsvil", value=mission.get("faction", "?"), inline=True)
+    embed.add_field(name="Nahoroda", value=items, inline=True)
+    embed.add_field(name="Zakinchuyetsya", value=alert.get("eta", "?"), inline=False)
     embed.set_footer(text="Warframe Alerts")
     return embed
 
 def build_invasion_embed(inv):
-    embed = discord.Embed(title="Нова Інвазія!", color=0x8B0000, timestamp=datetime.now(timezone.utc))
-    embed.add_field(name="Місце", value=inv.get("node", "?"), inline=False)
-    embed.add_field(name="Атакує", value=inv.get("attackingFaction", "?"), inline=True)
-    embed.add_field(name="Захищає", value=inv.get("defendingFaction", "?"), inline=True)
-    embed.add_field(name="Нагорода атакуючих", value=inv.get("attackerReward", {}).get("itemString", "—"), inline=True)
-    embed.add_field(name="Нагорода захисників", value=inv.get("defenderReward", {}).get("itemString", "—"), inline=True)
+    embed = discord.Embed(title="Nova Invaziya!", color=0x8B0000, timestamp=datetime.now(timezone.utc))
+    embed.add_field(name="Mistse", value=inv.get("node", "?"), inline=False)
+    embed.add_field(name="Atakuye", value=inv.get("attackingFaction", "?"), inline=True)
+    embed.add_field(name="Zakhyshchaye", value=inv.get("defendingFaction", "?"), inline=True)
+    embed.add_field(name="Nahoroda atakuyuchykh", value=inv.get("attackerReward", {}).get("itemString", "-"), inline=True)
+    embed.add_field(name="Nahoroda zakhysnykiv", value=inv.get("defenderReward", {}).get("itemString", "-"), inline=True)
     completion = inv.get("completion", 0)
-    bar = "█" * int(completion / 10) + "░" * (10 - int(completion / 10))
-    embed.add_field(name=f"Прогрес {completion:.1f}%", value=bar, inline=False)
+    bar = "X" * int(completion / 10) + "." * (10 - int(completion / 10))
+    embed.add_field(name=f"Prohres {completion:.1f}%", value=bar, inline=False)
     embed.set_footer(text="Warframe Invasions")
     return embed
 
 def build_event_embed(event):
-    embed = discord.Embed(title=f"Подія: {event.get('description', 'Без назви')}", description=event.get("tooltip", ""), color=0xFFD700, timestamp=datetime.now(timezone.utc))
-    embed.add_field(name="Закінчується", value=event.get("expiry", "?"), inline=True)
+    embed = discord.Embed(title=f"Podiya: {event.get('description', 'Bez nazvy')}", description=event.get("tooltip", ""), color=0xFFD700, timestamp=datetime.now(timezone.utc))
+    embed.add_field(name="Zakinchuyetsya", value=event.get("expiry", "?"), inline=True)
     embed.set_footer(text="Warframe Events")
     return embed
 
 def build_news_embed(item):
-    embed = discord.Embed(title=item.get("message", "Новина"), url=item.get("link", ""), color=0x1E90FF, timestamp=datetime.now(timezone.utc))
+    embed = discord.Embed(title=item.get("message", "Novyna"), url=item.get("link", ""), color=0x1E90FF, timestamp=datetime.now(timezone.utc))
     if item.get("imageLink"):
         embed.set_image(url=item["imageLink"])
     embed.set_footer(text="Warframe News")
@@ -69,7 +69,7 @@ def build_news_embed(item):
 async def check_warframe_news():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
-        print(f"Канал {CHANNEL_ID} не знайдено!")
+        print(f"Kanal {CHANNEL_ID} ne znaydeno!")
         return
 
     async with aiohttp.ClientSession() as session:
@@ -122,7 +122,7 @@ async def check_warframe_news():
             print(f"News error: {e}")
 
     save_state(state)
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Перевірку завершено.")
+    print(f"Check done: {datetime.now().strftime('%H:%M:%S')}")
 
 @check_warframe_news.before_loop
 async def before_check():
@@ -130,10 +130,10 @@ async def before_check():
 
 @bot.command(name="wf_status")
 async def wf_status(ctx):
-    embed = discord.Embed(title="Warframe Bot — Статус", color=0x00FF88, timestamp=datetime.now(timezone.utc))
-    embed.add_field(name="Інтервал", value="5 хвилин", inline=True)
-    embed.add_field(name="Алертів", value=str(len(state["alerts"])), inline=True)
-    embed.add_field(name="Інвазій", value=str(len(state["invasions"])), inline=True)
+    embed = discord.Embed(title="Warframe Bot - Status", color=0x00FF88, timestamp=datetime.now(timezone.utc))
+    embed.add_field(name="Interval", value="5 min", inline=True)
+    embed.add_field(name="Alerts", value=str(len(state["alerts"])), inline=True)
+    embed.add_field(name="Invasions", value=str(len(state["invasions"])), inline=True)
     await ctx.send(embed=embed)
 
 @bot.command(name="wf_reset")
@@ -142,7 +142,7 @@ async def wf_reset(ctx):
     global state
     state = {"alerts": [], "invasions": [], "events": [], "news": []}
     save_state(state)
-    await ctx.send("Стан скинуто!")
+    await ctx.send("State reset!")
 
 @bot.event
 async def on_ready():
